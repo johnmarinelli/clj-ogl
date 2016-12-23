@@ -1,8 +1,7 @@
 (ns clj-ogl.core
   (import [com.jogamp.newt Display NewtFactory Screen]
           [com.jogamp.newt.opengl GLWindow]
-          [com.jogamp.opengl GL4 GLAutoDrawable GLCapabilities GLContext GLEventListener GLProfile]
-
+          [com.jogamp.opengl GL3 GL4 GLAutoDrawable GLCapabilities GLContext GLEventListener GLProfile]
           [com.jogamp.opengl.util GLBuffers Animator]
           [java.nio ByteBuffer FloatBuffer IntBuffer ShortBuffer]))
 
@@ -11,7 +10,7 @@
   (NewtFactory/createDisplay name))
 
 ; https://jogamp.org/deployment/jogamp-next/javadoc/jogl/javadoc/com/jogamp/newt/Screen.html
-(defn create-screen [^Display display, ^long index]
+(defn create-screen [^Display display ^long index]
   (NewtFactory/createScreen display index))
 
 ; https://jogamp.org/deployment/v2.1.0/javadoc/jogl/javadoc/javax/media/opengl/GLProfile.html
@@ -58,34 +57,57 @@
               [:vertex :element :transform :max] 
               (range 0 4))))
 
+(comment(def HelloTriangle
+   (reify GLEventListener
+     (display [this drawable]
+       )
+    
+     (dispose [this drawable])
+     (reshape [this drawable x y width height]
+       (println "Reshape")
+       (let [gl4 (-> drawable .getGL .getGL4)]
+         (.glViewport gl4 x y width height)))
+
+     (init [this drawable]
+       (println "Init")
+       (let [gl4 (-> drawable .getGL .getGL4)
+             scale (make-array Float/TYPE 16)
+             z-rotation (make-array Float/TYPE 16)
+             model-to-clip (make-array Float/TYPE 16)
+             start 0
+             now 0
+             buffer-name (GLBuffers/newDirectIntBuffer (:max BUFFER)) ; vao
+             vertex-array-name (GLBuffers/newDirectIntBuffer 1)
+             clear-color (GLBuffers/newDirectFloatBuffer (float-array [1.0 0.5 0.0 1.0]))
+             clear-depth (GLBuffers/newDirectFloatBuffer (float-array [1.0]))]
+         ((fn init-buffers [^GL4 gl4]
+            (let [vertex-buffer (GLBuffers/newDirectFloatBuffer vertex-data)
+                  element-buffer (GLBuffers/newDirectShortBuffer element-data)]
+                                        ;             (.glCreateVertexArrays gl4 (:max BUFFER) buffer-name)
+                                        ;             (.glCreateBuffers gl4 (:max BUFFER) buffer-name)
+                                        ;             (.glNamedBufferStorage (.get buffer-name (:vertex BUFFER)) (* (.capacity vertex-buffer) Float/BYTES vertex-buffer com.jogamp.opengl.GL/GL_STATIC_DRAW))
+              )) 
+          gl4))))))
+
 (def HelloTriangle
   (reify GLEventListener
     (display [this drawable])
     (dispose [this drawable])
     (reshape [this drawable x y width height]
-      (println "Reshape")
       (let [gl4 (-> drawable .getGL .getGL4)]
         (.glViewport gl4 x y width height)))
     (init [this drawable]
-      (println "Init")
       (let [gl4 (-> drawable .getGL .getGL4)
             scale (make-array Float/TYPE 16)
-            z-rotation (make-array Float/TYPE 16)
             model-to-clip (make-array Float/TYPE 16)
             start 0
             now 0
-            buffer-name (GLBuffers/newDirectIntBuffer (:max BUFFER)) ; "vao"
-            vertex-array-name (GLBuffers/newDirectIntBuffer 1)
+            buffer (GLBuffers/newDirectIntBuffer (:max BUFFER))
+            vertex-array (GLBuffers/newDirectIntBuffer 1)
             clear-color (GLBuffers/newDirectFloatBuffer (float-array [1.0 0.5 0.0 1.0]))
             clear-depth (GLBuffers/newDirectFloatBuffer (float-array [1.0]))]
-        ((fn init-buffers [^GL4 gl4]
-           (let [vertex-buffer (GLBuffers/newDirectFloatBuffer vertex-data)
-                 element-buffer (GLBuffers/newDirectShortBuffer element-data)]
-             (.glGenVertexArrays gl4 (:max BUFFER) buffer-name)
-;             (.glCreateBuffers gl4 (:max BUFFER) buffer-name)
-;             (.glNamedBufferStorage (.get buffer-name (:vertex BUFFER)) (* (.capacity vertex-buffer) Float/BYTES vertex-buffer com.jogamp.opengl.GL/GL_STATIC_DRAW))
-             )) 
-         gl4)))))
+        (.glGenBuffers gl4 (:max BUFFER) buffer)
+        (.glBindBuffer gl4 GL4/GL_ARRAY_BUFFER (.get buffer (:vertex BUFFER)))))))
 
 (def display (create-display "john"))
 (def screen (create-screen display 0))
@@ -95,8 +117,8 @@
 
 (.setSize wdw 1024 768)
 (.setPosition wdw 50 50)
-(.setVisible wdw true)
 
 (.addGLEventListener wdw HelloTriangle)
 
-(.start (Animator. wdw))
+;(.start (Animator. wdw))
+
