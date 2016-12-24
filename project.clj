@@ -8,4 +8,5 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.jogamp.gluegen/gluegen "2.3.2"]
                  [org.jogamp.gluegen/gluegen-rt "2.3.2" :classifier "natives-macosx-universal"]
-                 [org.jogamp.jogl/jogl-all "2.3.2"]])
+                 [org.jogamp.jogl/jogl-all "2.3.2"]
+                 [debugger "0.2.0"]])
